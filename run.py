@@ -38,58 +38,68 @@ def md5str(origin_str):
 
 def countlen(cursor):
     i=0
-    for row in cursor
+    for row in cursor :
         i=i+1
     return i
 
-def resolve_message(content_type,content_type):
+def resolve_message(content_type,content):
     '''
         todo:
     '''
-    result=content
-    return result
+    resultcontent = ""
+    resultcontent = content
+    return resultcontent
 
 
-def build_session(file_buf,username,time,content_type,content,des):
+def build_session(username,time,content_type,content,des):
     '''
         build one piece of message to text
         format 1:   time -- me -- \n message
         format 2:   username -- time  \n message
     '''
     user =username #single chat session
-
+    print username+str(time)+"\n"
+    file_buf=""
     if des :
         #format 2
         file_buf = file_buf + user + unixstamp2strtime(time) + "\n"
     else :
         #format 1
-        file_buf = file_buf + unixstamp2strtime(time) + "我：" + "\n"
+        file_buf = file_buf + unixstamp2strtime(time) + "  我：" + "\n"
 
     #resolve it
+    print file_buf
     file_buf = file_buf + resolve_message(content_type,content) + "\n"
 
     file_buf = file_buf+"\n"
-    return
+    
+
+    return file_buf
 
 def output_data(db_handle,username):
     '''
     TODO:
     '''
+    print "Chat with "+username
     chat_db="Chat_"+md5str(username)
     sql="select CreateTime,Type,Message,Des from "+chat_db+" order by MesLocalID "
-
+    print sql
     chat_log = db_handle.execute(sql)
 
     #prepare head of session
-    content="Total :"+str(countlen(chat_log)) + "messages"+ "\n\n"
+    #content="Total :"+str(countlen(chat_log)) + " messages"+ "\n\n"
+    content = ""
+    i=0
+    for row in chat_log :
+        print str(i)
+        i=i+1
+        content = content + build_session(username,row[0],row[1],row[2],row[3])
 
-    for row in chat_log
-        build_session(content,username,row[0],row[1],row[2],row[3])
+    write_file(username+".txt",content)
 
-    write_file(username,content)
     return
 
-def controller(db_handle):
+def controller(db_handle,username="ALLCHAT"):
     #count chat list
     chatlistcount = db_handle.execute("select name from sqlite_sequence where name like \"Chat_%\"")
     print "Total: "+str(countlen(chatlistcount))+" sessions"
@@ -110,7 +120,11 @@ def printhelp():
 #main function
 if len(sys.argv) >1 :
     conn=sqlite3.connect(sys.argv[1])
-    controller(conn)
+    if len(sys.argv) == 3 :
+        controller(conn, sys.argv[2])
+    else:
+        controller(conn)
+    
     conn.close()
 
 else:
