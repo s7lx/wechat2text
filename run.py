@@ -5,6 +5,7 @@ import sqlite3
 import hashlib
 import sys
 import time
+import io
 from datetime import datetime
 
 def read_file(fn):
@@ -16,7 +17,7 @@ def read_file(fn):
 
 def write_file(fn,content):
     '''read file '''
-    fp=open(fn,"wb")
+    fp=io.open(fn,"w")
     h=fp.write(content)
     fp.close
     return h
@@ -46,7 +47,7 @@ def resolve_message(content_type,content):
     '''
         todo:
     '''
-    resultcontent = ""
+    
     resultcontent = content
     return resultcontent
 
@@ -58,21 +59,21 @@ def build_session(username,time,content_type,content,des):
         format 2:   username -- time  \n message
     '''
     user =username #single chat session
-    print username+str(time)+"\n"
+
     file_buf=""
     if des :
         #format 2
-        file_buf = file_buf + user + unixstamp2strtime(time) + "\n"
+        file_buf = file_buf + user + ": " + unixstamp2strtime(time) + "\n"
     else :
         #format 1
-        file_buf = file_buf + unixstamp2strtime(time) + "  我：" + "\n"
+        file_buf = file_buf + unixstamp2strtime(time) + u"  我：" + "\n"
 
     #resolve it
-    print file_buf
+
     file_buf = file_buf + resolve_message(content_type,content) + "\n"
 
     file_buf = file_buf+"\n"
-    
+
 
     return file_buf
 
@@ -81,20 +82,22 @@ def output_data(db_handle,username):
     TODO:
     '''
     print "Chat with "+username
+    print "Total :"+str(countlen(chat_log)) + " messages"+ "\n\n"
     chat_db="Chat_"+md5str(username)
     sql="select CreateTime,Type,Message,Des from "+chat_db+" order by MesLocalID "
-    print sql
+
     chat_log = db_handle.execute(sql)
 
     #prepare head of session
-    #content="Total :"+str(countlen(chat_log)) + " messages"+ "\n\n"
+    content="Total :"+str(countlen(chat_log)) + " messages"+ "\n\n"
     content = ""
     i=0
     for row in chat_log :
-        print str(i)
         i=i+1
         content = content + build_session(username,row[0],row[1],row[2],row[3])
-
+        if i %1000 ==0:
+            print str(i)+" messages"
+    
     write_file(username+".txt",content)
 
     return
@@ -107,9 +110,15 @@ def controller(db_handle,username="ALLCHAT"):
     #get chat list from table(Session list )
     cur = db_handle.execute("select username from friend_meta order by lastUpdate desc")
 
+
     #excute read data (from db) and write file (text)
-    for username in cur
-        output(db_handle,username[0])
+    if username == "ALLCHAT":
+
+        for user in cur :
+            output_data(db_handle,user[0])
+
+    else :
+        output_data(db_handle,username)
 
     return
 
@@ -124,7 +133,7 @@ if len(sys.argv) >1 :
         controller(conn, sys.argv[2])
     else:
         controller(conn)
-    
+
     conn.close()
 
 else:
