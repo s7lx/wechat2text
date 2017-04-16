@@ -37,15 +37,17 @@ def md5str(origin_str):
     return str(hashlib.md5(origin_str).hexdigest())
 
 
-def countlen(cursor):
-    i=0
-    for row in cursor :
-        i=i+1
-    return i
+def countlen(db_handle,sql):
+    sql_local="select count(*) from "+sql
+    cur_count=db_handle.execute(sql_local)
+    count=0
+    for row in cur_count:
+        count=row[0]
+    return count
 
 def resolve_message(content_type,content):
     '''
-        todo:
+        resolve content Type
     '''
     
     resultcontent = content
@@ -54,7 +56,7 @@ def resolve_message(content_type,content):
 
 def build_session(username,time,content_type,content,des):
     '''
-        build one piece of message to text
+        construct  message 
         format 1:   time -- me -- \n message
         format 2:   username -- time  \n message
     '''
@@ -79,33 +81,42 @@ def build_session(username,time,content_type,content,des):
 
 def output_data(db_handle,username):
     '''
-    TODO:
+    TODO: 
     '''
     print "Chat with "+username
-    print "Total :"+str(countlen(chat_log)) + " messages"+ "\n\n"
+    
     chat_db="Chat_"+md5str(username)
-    sql="select CreateTime,Type,Message,Des from "+chat_db+" order by MesLocalID "
 
+    sql="select CreateTime,Type,Message,Des from "+chat_db+" order by MesLocalID "
     chat_log = db_handle.execute(sql)
 
+    db_len=countlen(db_handle,chat_db)
+    print "Total :"+str(db_len) + " messages"+ "\n\n"
+
     #prepare head of session
-    content="Total :"+str(countlen(chat_log)) + " messages"+ "\n\n"
-    content = ""
+
+    content="Total :"+str(db_len) + " messages"+ "\n\n"
+    
     i=0
     for row in chat_log :
         i=i+1
         content = content + build_session(username,row[0],row[1],row[2],row[3])
         if i %1000 ==0:
-            print str(i)+" messages"
+            print str(i)+" messages ( Total : "+str(db_len)+")"
     
     write_file(username+".txt",content)
 
     return
 
 def controller(db_handle,username="ALLCHAT"):
+    '''
+        main function
+
+    '''
     #count chat list
     chatlistcount = db_handle.execute("select name from sqlite_sequence where name like \"Chat_%\"")
-    print "Total: "+str(countlen(chatlistcount))+" sessions"
+
+    print "Total: "+str(countlen(db_handle,"sqlite_sequence where name like \"Chat_%\""))+" sessions"
 
     #get chat list from table(Session list )
     cur = db_handle.execute("select username from friend_meta order by lastUpdate desc")
@@ -126,7 +137,7 @@ def printhelp():
     print "usage: "+sys.argv[0]+" db_file_name [table_name]"
     return
 
-#main function
+#entry point function 
 if len(sys.argv) >1 :
     conn=sqlite3.connect(sys.argv[1])
     if len(sys.argv) == 3 :
