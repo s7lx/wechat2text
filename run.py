@@ -87,7 +87,7 @@ def output_data(db_handle,username):
     
     chat_db="Chat_"+md5str(username)
 
-    sql="select CreateTime,Type,Message,Des from "+chat_db+" order by MesLocalID "
+    sql="select CreateTime,Type,Message,Des from "+chat_db+" order by CreateTime "
     chat_log = db_handle.execute(sql)
 
     db_len=countlen(db_handle,chat_db)
