@@ -86,12 +86,24 @@ def build_session(username,time,content_type,content,des):
         format 1:   time -- me -- \n message
         format 2:   username -- time  \n message
     '''
-    user =username #single chat session
+    if username.endswith("@chatroom",0) :
+        chatroom_mode=True
+    else:
+        chatroom_mode=False
+    #check chatroom_mode
+
+    if chatroom_mode :
+        user= "" #chatroom mode
+    else: 
+        user =username #single chat mode
 
     file_buf=""
     if des :
         #format 2
-        file_buf = file_buf + user + ": " + unixstamp2strtime(time) + "\n"
+        if chatroom_mode:
+            file_buf = file_buf + unixstamp2strtime(time) + "\n"  #chat mode
+        else:
+            file_buf = file_buf + user + u": " + unixstamp2strtime(time) + "\n" #single mode
     else :
         #format 1
         file_buf = file_buf + unixstamp2strtime(time) + u"  我：" + "\n"
