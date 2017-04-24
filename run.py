@@ -58,10 +58,9 @@ def message_location(content):
 
     re_str_poi="<location.*? label=\"(.*?)\" "
     poi=re.compile(re_str_poi,re.DOTALL).findall(content)
-    print poi[0]
+
     #http://www.google.cn/maps/@35.2135204,104.0196158,15z
     ret_str=poi[0]+u"(http://www.google.com/maps/@"+x[0]+u","+y[0]+u",15z)\n"
-    print content
 
     return ret_str
     
