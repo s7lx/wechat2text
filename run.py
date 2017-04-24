@@ -6,6 +6,7 @@ import hashlib
 import sys
 import time
 import io
+import re
 from datetime import datetime
 
 def read_file(fn):
@@ -45,12 +46,38 @@ def countlen(db_handle,sql):
         count=row[0]
     return count
 
+def message_location(content):
+    '''
+    resolve location message
+    '''
+    re_str_x="<location.*? x=\"(.*?)\" "
+    x=re.compile(re_str_x,re.DOTALL).findall(content)
+
+    re_str_y="<location.*? y=\"(.*?)\" "
+    y=re.compile(re_str_y,re.DOTALL).findall(content)
+
+    re_str_poi="<location.*? label=\"(.*?)\" "
+    poi=re.compile(re_str_poi,re.DOTALL).findall(content)
+    print poi[0]
+    #http://www.google.cn/maps/@35.2135204,104.0196158,15z
+    ret_str=poi[0]+u"(http://www.google.com/maps/@"+x[0]+u","+y[0]+u",15z)\n"
+    print content
+
+    return ret_str
+    
+
 def resolve_message(content_type,content):
     '''
         resolve content Type
+
+        Type 48: Location
+        Type 49: share link
+        Type 
     '''
-    
-    resultcontent = content
+    if content_type== 48 : #type is map
+        resultcontent = message_location(content)
+    else:
+        resultcontent = content
     return resultcontent
 
 
